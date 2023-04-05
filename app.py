@@ -1,15 +1,21 @@
 import argparse
+from flask import Flask, redirect, url_for, request, render_template
+from flask_admin import Admin
 from flask_sqlalchemy import SQLAlchemy
-from flask import *
+from flask_admin.contrib.sqla import ModelView
+from flask_login import current_user, login_user, login_required, LoginManager, UserMixin
 
 
 app = Flask(__name__)
+
+app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
+app.secret_key = 'its a secret to everyone'
 
 db = SQLAlchemy(app)
 
 #database model for Users
-class Users(db.Model):
+class Users(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String, unique = True, nullable = False)
     password = db.Column(db.String, nullable = False)
@@ -25,8 +31,18 @@ class Courses(db.Model):
     course_time = db.Column(db.String, unique = True, nullable = False)
     #will add number of student enrolled later
 
+#flask admin 
+admin = Admin(app, name='EnrollmentApp', template_mode='bootstrap3')
+admin.add_view(ModelView(Users, db.session))
+admin.add_view(ModelView(Courses, db.session))
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(user_id)          
 
 
 @app.route('/')
