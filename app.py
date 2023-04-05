@@ -105,6 +105,20 @@ def login():
     return redirect(url_for('index'))
 
 
+@app.route("/student")
+
+def studentClasses():
+    stuClasses = []
+    enrolledCourses = EnrolledClasses.query.filter_by(user_id = 1)
+     # using 1 for testing data, replace with current_user
+
+    for course in enrolledCourses:
+        stuClasses.append(course.classes_id)
+
+    classes = Courses.query.filter(Courses.course_id.in_(stuClasses))
+
+    return render_template('studentScheduleTest.html', courses = classes)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CSE 160 Lab 8 Student Enrollment Web App")
     parser.add_argument("--port", default=5000, type=int)
