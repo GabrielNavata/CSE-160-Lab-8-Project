@@ -14,25 +14,60 @@ app.secret_key = 'its a secret to everyone'
 
 db = SQLAlchemy(app)
 
+
 #database model for Users
 class Users(UserMixin, db.Model):
+    __tablename__ = "Users"
     id = db.Column(db.Integer, primary_key = True)
-    username = db.Column(db.String, unique = True, nullable = False)
+    username = db.Column(db.String, nullable = False)
+    name = db.Column(db.String, nullable = False)
     password = db.Column(db.String, nullable = False)
+    accountId = db.Column(db.Integer, nullable = False) 
+    #0:Student, 1:Teacher, 2:Admin
+
+    def __init__(self, username, name, password, accountId):
+        self.username = username
+        self.name = name
+        self.password = password
+        self.accountId = accountId
 
     def check_password(self, password):
         return self.password == password
+
+    def get_id(self):
+        return self.id
 
     def __repr__(self):
         return f"User('{self.username}')"
 
 #database model for Courses
 class Courses(db.Model):
+    __tablename__ = "Courses"
     course_id = db.Column(db.Integer, primary_key = True)
-    course_name = db.Column(db.String, unique = True, nullable = False)
-    course_teacher = db.Column(db.String, unique = True, nullable = False)
-    course_time = db.Column(db.String, unique = True, nullable = False)
-    #will add number of student enrolled later
+    course_name = db.Column(db.String, nullable = False)
+    course_teacher = db.Column(db.String, nullable = False)
+    course_time = db.Column(db.String, nullable = False)
+    students_enrolled = db.Column(db.Integer, nullable = False)
+    capacity = db.Column(db.Integer, nullable = False)
+
+    def __init__(self, course_name, course_teacher, course_time, studnets_enrolled, capacity):
+        self.course_name = course_name
+        self.course_teacher = course_teacher
+        self.course_time = course_time
+        self.students_enrolled = students_enrolled
+        self.capacity = capacity
+
+#database model for enrolled classes, links both courses table with users table
+class EnrolledClasses(db.Model):
+    __tablename__ = "EnrolledClasses"
+    user_id = db.Column(db.ForeignKey("Users.id"), primary_key = True)
+    classes_id = db.Column(db.ForeignKey("Courses.course_id"), primary_key = True)
+    grade = db.Column(db.Integer, nullable = False)
+
+    def __init__(self, user_id, classes_id, grade):
+        self.user_id = user_id
+        self.classes_id = classes_id
+        self.grade = grade
 
 #flask admin 
 admin = Admin(app, name='EnrollmentApp', template_mode='bootstrap3')
