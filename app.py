@@ -20,6 +20,9 @@ class Users(UserMixin, db.Model):
     username = db.Column(db.String, unique = True, nullable = False)
     password = db.Column(db.String, nullable = False)
 
+    def check_password(self, password):
+        return self.password == password
+
     def __repr__(self):
         return f"User('{self.username}')"
 
@@ -42,12 +45,29 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return Users.query.get(user_id)          
+    return Users.query.get(user_id)     
 
 
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
+
+#login stuff no security stuff yet
+@app.route('/login')
+def login_page():
+    #replace with actual login template later
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user = Users.query.filter_by(username=request.form['username']).first()
+    if user is None or not user.check_password(request.form['password']):
+        return redirect(url_for('login'))
+    login_user(user)
+    return redirect(url_for('index'))
 
 
 if __name__ == "__main__":
