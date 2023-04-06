@@ -11,7 +11,6 @@
                         <th>Teacher</th>
                         <th>Time</th>
                         <th>Enrolled</th>
-                        <th>Capacity</th>
                     </tr>
                 <tbody>
                     {% for course in courses %}
@@ -19,8 +18,7 @@
                         <td>{{course.course_name}}</td>
                         <td>{{course.course_teacher}}</td>
                         <td>{{course.course_time}}</td>
-                        <td>{{course.enrolled}}</td>
-                        <td>{{course.capacity}}</td>
+                        <td>{{course.enrolled}} / {{course.capacity}}</td>
                     </tr>
                     {% endfor %}</tbody>
             </table><br>
