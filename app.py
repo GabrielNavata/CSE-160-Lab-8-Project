@@ -50,7 +50,7 @@ class Courses(db.Model):
     students_enrolled = db.Column(db.Integer, nullable = False)
     capacity = db.Column(db.Integer, nullable = False)
 
-    def __init__(self, course_name, course_teacher, course_time, studnets_enrolled, capacity):
+    def __init__(self, course_name, course_teacher, course_time, students_enrolled, capacity):
         self.course_name = course_name
         self.course_teacher = course_teacher
         self.course_time = course_time
