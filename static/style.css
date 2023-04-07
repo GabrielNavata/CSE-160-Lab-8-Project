@@ -1,1 +1,19 @@
 /*css stuff*/
+div{
+    padding-top: 10px;
+    padding-right: 30px;
+    padding-left: 30px;
+    padding-bottom: 15px;
+    text-align: center;
+}
+
+div.box{
+    background-color: rgba(0, 110, 178, 0.896);
+    padding-top: 5px;
+    padding-right: 40px;
+    padding-left: 40px;
+    padding-bottom: 30px;
+    display: inline-block;
+    border-style: groove;
+  }
+
