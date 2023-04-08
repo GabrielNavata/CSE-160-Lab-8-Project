@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>All Courses</title>
+    <link rel="stylesheet" href="static/style.css">
+  </head>
+  <body>
+    <h1>Enrolled Courses</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Course Name</th>
+          <th>Teacher</th>
+          <th>Time</th>
+          <th>Students Enrolled</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in allCourses %}
+        <tr>
+          <td>{{ course.course_name }}</td>
+          <td>{{ course.course_teacher }}</td>
+          <td>{{ course.course_time }}</td>
+          <td>{{ course.students_enrolled }}/{{ course.capacity }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a href="{{ url_for('studentUser') }}">View all Courses</a>
+  </body>
+</html>
