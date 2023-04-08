@@ -1,0 +1,5 @@
+Flask==latest
+argparse==latest
+Flask-Admin==latest
+Flask-SQLAlchemy==latest
+Flask-Login==latest
