@@ -24,24 +24,17 @@
               <td>{{ course.course_time }}</td>
               <td>{{ course.students_enrolled }}/{{ course.capacity }}</td>
               <td>
-                {% if course in current_user.enrolled %}
+                {% if course.course_id in user %}
                     <form action="/remove_course" method="post">
                     <input type="hidden" name="course_id" value="{{ course.course_id }}">
                     <button type="submit" class="add-course-btn">Remove Course</button>
-                    </form> 
+                    </form>
                 {% else %}
-                  {% if course.students_enrolled == course.capacity %}
                     <form action="/add_course" method="post">
-                      <input type="hidden" name="course_id" value="{{ course.course_id }}">
-                      <button type="submit" class="add-course-btn" disabled>Add Course</button>
-                      </form>
-                    {% else %}
-                      <form action="/add_course" method="post">
-                      <input type="hidden" name="course_id" value="{{ course.course_id }}">
-                      <button type="submit" class="add-course-btn">Add Course</button>
-                      </form>
+                    <input type="hidden" name="course_id" value="{{ course.course_id }}">
+                    <button type="submit" class="add-course-btn">Add Course</button>
+                    </form>
                 {% endif %}
-              {% endif %}
               </td>
             </tr>
           {% endfor %}

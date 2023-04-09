@@ -15,11 +15,25 @@ app.secret_key = 'its a secret to everyone'
 db = SQLAlchemy(app)
 
 #association table
-users_courses = db.Table('users_courses',
-    db.Column('users_id', db.Integer, db.ForeignKey('Users.id')),                   
-    db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id')),
-    db.Column('grade', db.Integer, nullable = False, default = 100)  # new column for storing grades
-)
+# users_courses = db.Table('users_courses',
+#     db.Column('users_id', db.Integer, db.ForeignKey('Users.id')),                   
+#     db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id'))
+# )
+#database model for enrolled classes, links both courses table with users table
+class EnrolledClasses(db.Model):
+    __tablename__ = "EnrolledClasses"
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column('users_id', db.Integer, db.ForeignKey('Users.id'))
+    courses_id = db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id'))
+    grade = db.Column(db.Integer, nullable = True)
+
+    user = db.relationship('Users', back_populates = 'enrolled')
+    course = db.relationship('Courses', back_populates = 'enrolled')
+
+    def __init__(self, user_id, courses_id, grade):
+        self.user_id = user_id
+        self.courses_id = courses_id
+        self.grade = grade
 
 #database model for Users
 class Users(UserMixin, db.Model):
@@ -30,7 +44,7 @@ class Users(UserMixin, db.Model):
     password = db.Column(db.String, nullable = False)
     accountId = db.Column(db.Integer, nullable = False) 
     #0:Student, 1:Teacher, 2:Admin
-    enrolled = db.relationship('Courses', secondary = users_courses, lazy='subquery', backref = db.backref('enrolled_in',lazy=True))
+    enrolled = db.relationship('EnrolledClasses', back_populates = 'user')
 
     def __init__(self, username, name, password, accountId):
         self.username = username
@@ -57,6 +71,8 @@ class Courses(db.Model):
     students_enrolled = db.Column(db.Integer, nullable = False)
     capacity = db.Column(db.Integer, nullable = False)
 
+    enrolled = db.relationship('EnrolledClasses', back_populates = 'course')
+
     def __init__(self, course_name, course_teacher, course_time, students_enrolled, capacity):
         self.course_name = course_name
         self.course_teacher = course_teacher
@@ -64,17 +80,6 @@ class Courses(db.Model):
         self.students_enrolled = students_enrolled
         self.capacity = capacity
 
-#database model for enrolled classes, links both courses table with users table
-# class EnrolledClasses(db.Model):
-#     __tablename__ = "EnrolledClasses"
-#     user_id = db.Column(db.ForeignKey("Users.id"), primary_key = True)
-#     classes_id = db.Column(db.ForeignKey("Courses.course_id"), primary_key = True)
-#     grade = db.Column(db.Integer, nullable = False)
-
-#     def __init__(self, user_id, classes_id, grade):
-#         self.user_id = user_id
-#         self.classes_id = classes_id
-#         self.grade = grade
 
 #flask admin 
 admin = Admin(app, name='EnrollmentApp', template_mode='bootstrap3')
@@ -104,33 +109,24 @@ def login_page():
 @app.route('/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:
-        if current_user.accountId == 1:
-            return redirect(url_for('teacher'))
+        # if current_user.accountId == 1:
+        #     return redirect(url_for('teacher'))
         if current_user.accountId == 0:
             return redirect(url_for('studentUser'))
         else:
             return redirect(url_for('index'))
+        
     user = Users.query.filter_by(username=request.form['username']).first()
     if user is None or not user.check_password(request.form['password']):
         return redirect(url_for('login'))
-
+    
     login_user(user)
-    if current_user.accountId == 1:
-        return redirect(url_for('teacher'))
+    # if current_user.accountId == 1:
+    #     return redirect(url_for('teacher'))
     if current_user.accountId == 0:
         return redirect(url_for('studentUser'))
     else:
         return redirect(url_for('index'))
-
-@app.route('/teacher')
-@login_required
-def teacher():
-    if current_user.accountId != 1:
-        return redirect(url_for('index'))
-
-    courses = Courses.query.filter_by(course_teacher=current_user.name).all()
-
-    return render_template('teacher.html', courses=courses)
 
 
 @app.route("/student")
@@ -150,50 +146,33 @@ def studentClasses():
 #display all courses
 @app.route("/user")
 def studentUser():
+    # user_id = current_user.id  # get current user's id
+    # user = Users.query.get(user_id)
+    enrolled_courses = current_user.enrolled
     allCourses = Courses.query.all()
 
-    return render_template('all_courses.html', allCourses=allCourses)
+    #Loop through the enrolled courses and print out the course ids
+    courseId_list = []
+    for ec in enrolled_courses:
+        print(ec.courses_id)
+        courseId_list.append(ec.courses_id)
 
-
-@app.route('/teacher/<course_name>', methods = ["GET"])
-@login_required
-def teacherClassInfo(course_name):
-    
-    user_id = current_user.id  # get current user's id, teachers id
-
-    grades = []
-    studentsID = []
-    studentsNames = []
-    courseID = Courses.query.filter_by(course_name = course_name).first().course_id
-    #queries courses with same name as course_name
-    
-    students = db.session.query(users_courses).filter_by(courses_id = courseID)
-    #gets students id with same as course id
-    
-    for student in students:
-        studentsID.append(student.users_id)
-        grades.append(student.grade)
-        
-    enrolledStudents =  Users.query.filter(Users.id.in_(studentsID))
-    for names in enrolledStudents:
-        studentsNames.append(names.name)
-    #gets student name using their id
-    
-    length = len(studentsID)
-    
-    return render_template('teacherCourse.html', course_name = course_name, students = studentsNames, grades = grades, length = length)
-#prints students enrolled in teachers class
+    return render_template('all_courses.html', allCourses=allCourses, user = courseId_list)
 
 #go to page with all enrolled courses
 @app.route('/enrolled-courses')
 @login_required
 def enrolled_courses():
-    usersID = current_user.id
-    print(usersID)
-    user = Users.query.get(usersID)
-    allCourses =  user.enrolled
-    print(user.enrolled)
-    return render_template('enrolled_courses.html', allCourses = allCourses)
+    # usersID = current_user.id
+    # print(usersID)
+    # user = Users.query.get(usersID)
+    # allCourses =  current_user.enrolled
+    # print('this is current',user.enrolled)
+    
+    enrolled_classes = current_user.enrolled
+    all_courses = [enrolled.course for enrolled in enrolled_classes]
+    print(all_courses)
+    return render_template('enrolled_courses.html', allCourses = all_courses)
 
 #add a students course
 @app.route('/add_course', methods=['POST'])
@@ -201,41 +180,52 @@ def enrolled_courses():
 def enroll_course():
     user_id = current_user.id  # get current user's id
     course_id = request.form['course_id']  # get course_id from form data
+    enrollment = EnrolledClasses.query.filter_by(user_id=user_id, courses_id=course_id).first()
+
+    if enrollment:
+        flash('You are already enrolled in this course.', 'warning')
+        return redirect(url_for('studentUser'))
     
+    enrollment = EnrolledClasses(user_id=user_id, courses_id=course_id, grade=None)
+
     # Get the user and course objects from the database
     user = Users.query.get(user_id)
     course = Courses.query.get(course_id)
     print(course.course_id)
     
     # Add the course to the user's enrolled courses
-    if course not in user.enrolled:
-        print('ok')
-        user.enrolled.append(course)
-        course.students_enrolled += 1
-    
-        db.session.commit()
+   
+    user.enrolled.append(enrollment)
+    course.students_enrolled += 1
+
+    db.session.commit()
 
     return redirect(url_for('studentUser'))
 
-#remove a students course
 @app.route('/remove_course', methods=['POST'])
 @login_required
 def remove_course():
     user_id = current_user.id  # get current user's id
     course_id = request.form['course_id']  # get course_id from form data
 
+    # Get the enrollment object from the database
+    enrollment = EnrolledClasses.query.filter_by(user_id=user_id, courses_id=course_id).first()
+    if not enrollment:
+        flash('You are not enrolled in this course.', 'error')
+        return redirect(url_for('studentUser'))
+    
     # Get the user and course objects from the database
     user = Users.query.get(user_id)
     course = Courses.query.get(course_id)
 
-    if course in user.enrolled:
-        print('del')
-        user.enrolled.remove(course)
-        course.students_enrolled -= 1
-        db.session.commit()
-        flash('You have been removed from the course.', 'success')
-    else:
-        flash('You are not enrolled in this course.', 'error')
+    # Remove the enrollment from the user's enrolled courses
+    user.enrolled.remove(enrollment)
+    course.students_enrolled -= 1
+    db.session.delete(enrollment)
+
+    db.session.commit()
+
+    flash('You have been removed from the course.', 'success')
     return redirect(url_for('studentUser'))
 
 if __name__ == "__main__":
