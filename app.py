@@ -14,13 +14,21 @@ app.secret_key = 'its a secret to everyone'
 
 db = SQLAlchemy(app)
 
-#association table
-users_courses = db.Table('users_courses',
-    db.Column('users_id', db.Integer, db.ForeignKey('Users.id')),                   
-    db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id')),
-    db.Column('grade', db.Integer, nullable = False, default = 100)  # new column for storing grades
-)
+class EnrolledClasses(db.Model):
+    __tablename__ = "EnrolledClasses"
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column('users_id', db.Integer, db.ForeignKey('Users.id'))
+    courses_id = db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id'))
+    grade = db.Column(db.Integer, nullable = True, default = 100)
 
+    user = db.relationship('Users', back_populates = 'enrolled')
+    course = db.relationship('Courses', back_populates = 'enrolled')
+
+    def __init__(self, user_id, courses_id, grade):
+        self.user_id = user_id
+        self.courses_id = courses_id
+        self.grade = grade
+        
 #database model for Users
 class Users(UserMixin, db.Model):
     __tablename__ = "Users"
@@ -30,7 +38,7 @@ class Users(UserMixin, db.Model):
     password = db.Column(db.String, nullable = False)
     accountId = db.Column(db.Integer, nullable = False) 
     #0:Student, 1:Teacher, 2:Admin
-    enrolled = db.relationship('Courses', secondary = users_courses, lazy='subquery', backref = db.backref('enrolled_in',lazy=True))
+    enrolled = db.relationship('EnrolledClasses', back_populates = 'user')
 
     def __init__(self, username, name, password, accountId):
         self.username = username
@@ -44,8 +52,6 @@ class Users(UserMixin, db.Model):
     def get_id(self):
         return self.id
 
-    # def __repr__(self):
-    #     return f"User('{self.username}')"
 
 #database model for Courses
 class Courses(db.Model):
@@ -56,6 +62,9 @@ class Courses(db.Model):
     course_time = db.Column(db.String, nullable = False)
     students_enrolled = db.Column(db.Integer, nullable = False)
     capacity = db.Column(db.Integer, nullable = False)
+        
+    enrolled = db.relationship('EnrolledClasses', back_populates = 'course')
+
 
     def __init__(self, course_name, course_teacher, course_time, students_enrolled, capacity):
         self.course_name = course_name
@@ -64,17 +73,7 @@ class Courses(db.Model):
         self.students_enrolled = students_enrolled
         self.capacity = capacity
 
-#database model for enrolled classes, links both courses table with users table
-# class EnrolledClasses(db.Model):
-#     __tablename__ = "EnrolledClasses"
-#     user_id = db.Column(db.ForeignKey("Users.id"), primary_key = True)
-#     classes_id = db.Column(db.ForeignKey("Courses.course_id"), primary_key = True)
-#     grade = db.Column(db.Integer, nullable = False)
 
-#     def __init__(self, user_id, classes_id, grade):
-#         self.user_id = user_id
-#         self.classes_id = classes_id
-#         self.grade = grade
 
 #flask admin 
 admin = Admin(app, name='EnrollmentApp', template_mode='bootstrap3')
@@ -181,6 +180,7 @@ def teacherClassInfo(course_name):
     
     return render_template('teacherCourse.html', course_name = course_name, students = studentsNames, grades = grades, length = length)
 #prints students enrolled in teachers class
+
 #go to page with all enrolled courses
 @app.route('/enrolled-courses')
 @login_required
