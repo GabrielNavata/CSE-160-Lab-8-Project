@@ -17,7 +17,8 @@ db = SQLAlchemy(app)
 #association table
 users_courses = db.Table('users_courses',
     db.Column('users_id', db.Integer, db.ForeignKey('Users.id')),                   
-    db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id'))
+    db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id')),
+    db.Column('grade', db.Integer)  # new column for storing grades
 )
 
 #database model for Users
@@ -103,12 +104,33 @@ def login_page():
 @app.route('/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        if current_user.accountId == 1:
+            return redirect(url_for('teacher'))
+        if current_user.accountId == 0:
+            return redirect(url_for('studentUser'))
+        else:
+            return redirect(url_for('index'))
     user = Users.query.filter_by(username=request.form['username']).first()
     if user is None or not user.check_password(request.form['password']):
         return redirect(url_for('login'))
+
     login_user(user)
-    return redirect(url_for('index'))
+    if current_user.accountId == 1:
+        return redirect(url_for('teacher'))
+    if current_user.accountId == 0:
+        return redirect(url_for('studentUser'))
+    else:
+        return redirect(url_for('index'))
+
+@app.route('/teacher')
+@login_required
+def teacher():
+    if current_user.accountId != 1:
+        return redirect(url_for('index'))
+
+    courses = Courses.query.filter_by(course_teacher=current_user.name).all()
+
+    return render_template('teacher.html', courses=courses)
 
 
 @app.route("/student")
