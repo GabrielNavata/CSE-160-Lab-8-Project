@@ -103,8 +103,8 @@ def login_page():
 @app.route('/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:
-        # if current_user.accountId == 1:
-        #     return redirect(url_for('teacher'))
+        if current_user.accountId == 1:
+            return redirect(url_for('teacher'))
         if current_user.accountId == 0:
             return redirect(url_for('studentUser'))
         else:
@@ -115,8 +115,8 @@ def login():
         return redirect(url_for('login'))
     
     login_user(user)
-    # if current_user.accountId == 1:
-    #     return redirect(url_for('teacher'))
+    if current_user.accountId == 1:
+        return redirect(url_for('teacher'))
     if current_user.accountId == 0:
         return redirect(url_for('studentUser'))
     else:
@@ -160,6 +160,8 @@ def studentUser():
     for ec in enrolled_courses:
         print(ec.courses_id)
         courseId_list.append(ec.courses_id)
+
+    return render_template('all_courses.html', allCourses=allCourses, user = courseId_list)
 
 @app.route('/teacher/<course_name>', methods = ["GET"])
 @login_required
