@@ -154,6 +154,36 @@ def studentUser():
 
     return render_template('all_courses.html', allCourses=allCourses)
 
+
+@app.route('/teacher/<course_name>', methods = ["GET"])
+@login_required
+def teacherClassInfo(course_name):
+    
+    user_id = current_user.id  # get current user's id, teachers id
+
+    grades = []
+    studentsID = []
+    studentsNames = []
+    courseID = Courses.query.filter_by(course_name = course_name).first().course_id
+    #queries courses with same name as course_name
+    
+    students = db.session.query(users_courses).filter_by(courses_id = courseID)
+    #gets students id with same as course id
+    
+    for student in students:
+        studentsID.append(student.users_id)
+        grades.append(student.grade)
+        
+    enrolledStudents =  Users.query.filter(Users.id.in_(studentsID))
+    for names in enrolledStudents:
+        studentsNames.append(names.name)
+    #gets student name using their id
+    
+    length = len(studentsID)
+    
+    return render_template('teacherCourse.html', course_name = course_name, students = studentsNames, grades = grades, length = length)
+#prints students enrolled in teachers class
+
 #go to page with all enrolled courses
 @app.route('/enrolled-courses')
 @login_required
