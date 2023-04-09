@@ -18,7 +18,7 @@ db = SQLAlchemy(app)
 users_courses = db.Table('users_courses',
     db.Column('users_id', db.Integer, db.ForeignKey('Users.id')),                   
     db.Column('courses_id', db.Integer, db.ForeignKey('Courses.course_id')),
-    db.Column('grade', db.Integer)  # new column for storing grades
+    db.Column('grade', db.Integer, nullable = False, default = 100)  # new column for storing grades
 )
 
 #database model for Users
