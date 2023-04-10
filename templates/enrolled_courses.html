@@ -1,11 +1,11 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>All Courses</title>
-    <link rel="stylesheet" href="static/style.css">
-  </head>
+{% extends "base.html" %}
+{% block title %}Enrolled Courses{% endblock %}
+
+{% block heading %}
+    Enrolled Courses
+{% endblock %}
+{% block content %}
   <body>
-    <h1>Enrolled Courses</h1>
     <table>
       <thead>
         <tr>
@@ -28,4 +28,5 @@
     </table>
     <a href="{{ url_for('studentUser') }}">View all Courses</a>
   </body>
+  {% endblock %}
 </html>

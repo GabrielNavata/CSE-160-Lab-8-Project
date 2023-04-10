@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ course.course_name }}{% endblock %}
+
+{% block heading %}
+    {{ course.course_name }}
+{% endblock %}
+<head>
+
+<!--for some reason the css here will not apply unless I put it right in the html page-->
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+    
+</head>
+{% block content %}
+    <table>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for enrollment in enrollments %}
+                <tr>
+                    <td>{{ enrollment.user.name }}</td>
+                    <td>
+                        <form method="POST">
+                            <input type="number" min="0" max="100" step="0.01" name="grade_{{ enrollment.user_id }}" value="{{ enrollment.grade }}">
+                            <input type="submit" value="Update">
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

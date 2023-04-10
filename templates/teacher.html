@@ -1,8 +1,10 @@
-<head>
-    <link rel="stylesheet" href="static/style.css">
-</head>
+{% extends "base.html" %}
+{% block title %}Courses You Teach{% endblock %}
+
+{% block heading %}
+    Courses You Teach
+{% endblock %}
 {% block content %}
-    <h1>Courses You Teach</h1>
     {% if courses %}
         <table>
             <thead>
@@ -16,7 +18,7 @@
             <tbody>
             {% for course in courses %}
             <tr>
-                <td>{{ course.course_name }}</td>
+                <td><a href="{{ url_for('grade', course_id=course.course_id) }}">{{ course.course_name }}</a></td>
                 <td>{{ course.course_teacher }}</td>
                 <td>{{ course.course_time }}</td>
                 <td>{{ course.students_enrolled }}/{{ course.capacity }}</td>
