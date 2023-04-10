@@ -109,7 +109,7 @@ def index():
 @app.route('/login')
 def login_page():
     #replace with actual login template later
-    return render_template('login.html')
+    return render_template('teacherlogin.html')
 
 @app.route('/login', methods=['POST'])
 def login():
