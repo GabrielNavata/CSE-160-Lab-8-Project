@@ -87,6 +87,7 @@ class Courses(db.Model):
 admin = Admin(app, name='EnrollmentApp', template_mode='bootstrap3')
 admin.add_view(ModelView(Users, db.session))
 admin.add_view(ModelView(Courses, db.session))
+admin.add_view(ModelView(EnrolledClasses, db.session))
 # admin.add_view(MyModelView(Users, db.session))
 # admin.add_view(MyModelView(Courses, db.session))
 
@@ -102,7 +103,7 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html', UID = current_user.accountId)
 
 #login 
 @app.route('/login')
@@ -166,9 +167,10 @@ def grade(course_id):
 
     if request.method == 'POST':
         for enrollment in enrollments:
-            grade = request.form[f'grade_{enrollment.user_id}']
-            enrollment.grade = grade
-            db.session.commit()
+            grade = request.form.get(f'grade_{enrollment.user_id}')
+            if grade is not None:
+                enrollment.grade = grade
+                db.session.commit()
 
         flash('Grades have been updated.', 'success')
         return redirect(url_for('grade', course_id=course_id))
@@ -239,12 +241,6 @@ def teacherClassInfo(course_name):
 @app.route('/enrolled-courses')
 @login_required
 def enrolled_courses():
-    # usersID = current_user.id
-    # print(usersID)
-    # user = Users.query.get(usersID)
-    # allCourses =  current_user.enrolled
-    # print('this is current',user.enrolled)
-    
     enrolled_classes = current_user.enrolled
     all_courses = [enrolled.course for enrolled in enrolled_classes]
     print(all_courses)

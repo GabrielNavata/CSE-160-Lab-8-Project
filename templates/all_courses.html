@@ -33,7 +33,7 @@
                   {% if course.students_enrolled == course.capacity %}
                     <form action="/add_course" method="post">
                       <input type="hidden" name="course_id" value="{{ course.course_id }}">
-                      <button type="submit" class="add-course-btn" disabled>Add Course</button>
+                      <button type="submit" class="add-course-btn" disabled>Course Full</button>
                       </form>
                     {% else %}
                     <form action="/add_course" method="post">

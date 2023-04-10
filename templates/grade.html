@@ -25,7 +25,7 @@
             color: white;
         }
         input[type="number"] {
-            width: 80px;
+            width: 120px;
             padding: 5px;
             border: 1px solid #ddd;
             border-radius: 3px;
@@ -34,6 +34,7 @@
     
 </head>
 {% block content %}
+{% if enrollments %}
     <table>
         <thead>
             <tr>
@@ -55,4 +56,8 @@
             {% endfor %}
         </tbody>
     </table>
+{% else %}
+    <p>No Students In This Course</p>
+{% endif %}
+    <a href="{{ url_for('teacher') }}">Back To Your Courses</a>
 {% endblock %}
