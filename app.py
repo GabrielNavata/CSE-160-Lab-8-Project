@@ -3,7 +3,7 @@ from flask import Flask, redirect, url_for, request, render_template, flash
 from flask_admin import Admin
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin.contrib.sqla import ModelView
-from flask_login import current_user, login_user, login_required, LoginManager, UserMixin
+from flask_login import current_user, login_user, login_required, LoginManager, UserMixin, logout_user
 
 
 app = Flask(__name__)
@@ -74,11 +74,21 @@ class Courses(db.Model):
         self.students_enrolled = students_enrolled
         self.capacity = capacity
 
+#modelview class
+# class MyModelView(ModelView):
+#     def is_accessible(self):
+#         if current_user.is_authenticated:
+#             return 2 == current_user.accountId
+#         else:
+#             return False
+
 
 #flask admin 
 admin = Admin(app, name='EnrollmentApp', template_mode='bootstrap3')
 admin.add_view(ModelView(Users, db.session))
 admin.add_view(ModelView(Courses, db.session))
+# admin.add_view(MyModelView(Users, db.session))
+# admin.add_view(MyModelView(Courses, db.session))
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -103,6 +113,8 @@ def login_page():
 @app.route('/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:
+        if current_user.accountId == 2:
+            return redirect('/admin')
         if current_user.accountId == 1:
             return redirect(url_for('teacher'))
         if current_user.accountId == 0:
@@ -115,12 +127,21 @@ def login():
         return redirect(url_for('login'))
     
     login_user(user)
+    if current_user.accountId == 2:
+        return redirect('/admin')    
     if current_user.accountId == 1:
         return redirect(url_for('teacher'))
     if current_user.accountId == 0:
         return redirect(url_for('studentUser'))
     else:
         return redirect(url_for('index'))
+    
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('login'))
 
 @app.route('/teacher')
 @login_required
@@ -131,6 +152,29 @@ def teacher():
     courses = Courses.query.filter_by(course_teacher=current_user.name).all()
 
     return render_template('teacher.html', courses=courses)
+
+
+@app.route('/grade/<int:course_id>', methods=['GET', 'POST'])
+@login_required
+def grade(course_id):
+    if current_user.accountId != 1:
+        return redirect(url_for('index'))
+
+    course = Courses.query.get(course_id)
+    students = Users.query.join(EnrolledClasses).filter(EnrolledClasses.courses_id == course_id).all()
+    enrollments = EnrolledClasses.query.filter_by(courses_id=course.course_id).all()
+
+    if request.method == 'POST':
+        for enrollment in enrollments:
+            grade = request.form[f'grade_{enrollment.user_id}']
+            enrollment.grade = grade
+            db.session.commit()
+
+        flash('Grades have been updated.', 'success')
+        return redirect(url_for('grade', course_id=course_id))
+
+    return render_template('grade.html', course=course, students=students, enrollments=enrollments)
+
 
 
 @app.route("/student")
