@@ -1,6 +1,6 @@
 import argparse
 from flask import Flask, redirect, url_for, request, render_template, flash
-from flask_admin import Admin
+from flask_admin import Admin, AdminIndexView, expose
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, login_user, login_required, LoginManager, UserMixin, logout_user
@@ -74,22 +74,38 @@ class Courses(db.Model):
         self.students_enrolled = students_enrolled
         self.capacity = capacity
 
-#modelview class
-# class MyModelView(ModelView):
-#     def is_accessible(self):
-#         if current_user.is_authenticated:
-#             return 2 == current_user.accountId
-#         else:
-#             return False
-
+#override modelview class
+class MyModelView(ModelView):
+    def is_accessible(self):
+        if current_user.is_authenticated:
+            return 2 == current_user.accountId
+        else:
+            return False
+class MyAdminIndexView(AdminIndexView):
+    @expose('/')
+    def index(self):
+        return self.render('admin/index.html')
+        
+    def render(self, template, **kwargs):
+        # add a logout button to the template
+        kwargs['logout_url'] = url_for('logout')
+        
+        # call the original render method
+        return super(MyAdminIndexView, self).render(template, **kwargs)
+    def is_accessible(self):
+        if current_user.is_authenticated:
+            return 2 == current_user.accountId
+        else:
+            return False
 
 #flask admin 
 admin = Admin(app, name='EnrollmentApp', template_mode='bootstrap3')
-admin.add_view(ModelView(Users, db.session))
-admin.add_view(ModelView(Courses, db.session))
-admin.add_view(ModelView(EnrolledClasses, db.session))
-# admin.add_view(MyModelView(Users, db.session))
-# admin.add_view(MyModelView(Courses, db.session))
+# admin.add_view(ModelView(Users, db.session))
+# admin.add_view(ModelView(Courses, db.session))
+# admin.add_view(ModelView(EnrolledClasses, db.session))
+admin.add_view(MyModelView(Users, db.session))
+admin.add_view(MyModelView(Courses, db.session))
+admin.add_view(MyModelView(EnrolledClasses, db.session))
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -103,7 +119,8 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html', UID = current_user.accountId)
+    name = current_user.name
+    return render_template('index.html', UID = current_user.accountId, name = name)
 
 #login 
 @app.route('/login')
@@ -147,12 +164,13 @@ def logout():
 @app.route('/teacher')
 @login_required
 def teacher():
+    name = current_user.name
     if current_user.accountId != 1:
         return redirect(url_for('index'))
 
     courses = Courses.query.filter_by(course_teacher=current_user.name).all()
 
-    return render_template('teacher.html', courses=courses)
+    return render_template('teacher.html', courses=courses, name = name)
 
 
 @app.route('/grade/<int:course_id>', methods=['GET', 'POST'])
@@ -174,8 +192,8 @@ def grade(course_id):
 
         flash('Grades have been updated.', 'success')
         return redirect(url_for('grade', course_id=course_id))
-
-    return render_template('grade.html', course=course, students=students, enrollments=enrollments)
+    name = current_user.name
+    return render_template('grade.html', course=course, students=students, enrollments=enrollments, name = name)
 
 
 
@@ -206,8 +224,8 @@ def studentUser():
     for ec in enrolled_courses:
         print(ec.courses_id)
         courseId_list.append(ec.courses_id)
-
-    return render_template('all_courses.html', allCourses=allCourses, user = courseId_list)
+    name = current_user.name
+    return render_template('all_courses.html', allCourses=allCourses, user = courseId_list,name = name)
 
 @app.route('/teacher/<course_name>', methods = ["GET"])
 @login_required
@@ -243,8 +261,8 @@ def teacherClassInfo(course_name):
 def enrolled_courses():
     enrolled_classes = current_user.enrolled
     all_courses = [enrolled.course for enrolled in enrolled_classes]
-    print(all_courses)
-    return render_template('enrolled_courses.html', allCourses = all_courses)
+    name = current_user.name
+    return render_template('enrolled_courses.html', allCourses = all_courses, name = name)
 
 #add a students course
 @app.route('/add_course', methods=['POST'])

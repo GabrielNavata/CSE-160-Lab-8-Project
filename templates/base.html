@@ -9,6 +9,7 @@
         <div class="navbar-container">
             <h1>{% block heading %}{% endblock %}</h1>
             <ul>
+                <li class = 'displayName'>User: {{name}}</li>
                 <li><a href="{{ url_for('index') }}">Home</a></li>
                 {% if current_user.is_authenticated %}
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>

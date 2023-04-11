@@ -10,6 +10,8 @@
     <a href="{{ url_for('enrolled_courses') }}">View Enrolled Courses</a>
   {% elif UID == 1 %}
     <a href="{{ url_for('teacher') }}">View Your Courses</a>
+  {% elif UID == 2 %}
+    <a href="{{'/admin'}}">Go To Admin Page</a>
   {% else %}
     <h1>Welcome</h1>  
   {% endif %}

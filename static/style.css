@@ -11,7 +11,7 @@ tr:hover {
   background-color: #f5f5f5;
 }
 th {
-  background-color: #4CAF50;
+  background-color: rgb(50, 50, 210);
   color: white;
 }
 input[type="number"] {
@@ -21,7 +21,7 @@ input[type="number"] {
 /*nav bar stuff*/
 
 .navbar {
-  background-color: #4CAF50;
+  background-color: rgb(50, 50, 210);
   overflow: hidden;
 }
 
@@ -63,7 +63,7 @@ a {
 }
 
 a:hover {
-  color: #0056b3;
+  color: #04070b;
   text-decoration: underline;
 }
 /*font size stuff*/
@@ -81,4 +81,8 @@ p {
 
 a {
   font-size: 1.2em;
+}
+.displayName{
+  color: white;
+
 }
